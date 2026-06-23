@@ -1,6 +1,10 @@
-package top.zhaizz.entity;
+package top.zhaizz.pojo.entity;
 
+import com.alibaba.excel.annotation.format.DateTimeFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +16,9 @@ import java.time.LocalDateTime;
  * 彻底解决十万级数据下单行存储过大的问题。
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExcelDocument {
 
     /** 主键 */
@@ -41,8 +48,12 @@ public class ExcelDocument {
     /** 创建者 */
     private String creatorId;
 
+    /** 创建时间 */
+    @DateTimeFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
+    /** 更新时间 */
+    @DateTimeFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
 }

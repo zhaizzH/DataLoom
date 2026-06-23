@@ -1,6 +1,10 @@
-package top.zhaizz.entity;
+package top.zhaizz.pojo.entity;
 
+import com.alibaba.excel.annotation.format.DateTimeFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +15,9 @@ import java.time.LocalDateTime;
  * 不直接存储单元格数据，数据由 ExcelSheetChunk 分块存储。
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExcelSheet {
 
     /** 主键 */
@@ -64,8 +71,12 @@ public class ExcelSheet {
     /** 状态：1正常，3已删除 */
     private Integer status;
 
+    /** 创建时间 */
+    @DateTimeFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
+    /** 更新时间 */
+    @DateTimeFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
 }

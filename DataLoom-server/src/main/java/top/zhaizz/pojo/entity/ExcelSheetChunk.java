@@ -1,6 +1,10 @@
-package top.zhaizz.entity;
+package top.zhaizz.pojo.entity;
 
+import com.alibaba.excel.annotation.format.DateTimeFormat;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +19,9 @@ import java.time.LocalDateTime;
  * 对应关系：ExcelDocument → ExcelSheet → ExcelSheetChunk (1:N:N)
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExcelSheetChunk {
 
     /** 主键 */
@@ -43,6 +50,8 @@ public class ExcelSheetChunk {
      */
     private String celldataJson;
 
+    /** 创建时间 */
+    @DateTimeFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
 }

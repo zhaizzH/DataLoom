@@ -24,6 +24,7 @@
         <poi.version>5.4.0</poi.version>
         <easyexcel.version>2.2.11</easyexcel.version>
         <fastjson.version>1.2.68</fastjson.version>
+        <knife4j>3.0.2</knife4j>
     </properties>
     <dependencies>
         <dependency>
@@ -83,6 +84,20 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.4</version>
+        </dependency>
+
+        <!-- PageHelper 分页插件 -->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+
+        <!-- Knife4j - Swagger UI -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-spring-boot-starter</artifactId>
+            <version>${knife4j}</version>
         </dependency>
 
         <!-- 测试 -->
