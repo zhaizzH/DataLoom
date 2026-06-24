@@ -7,14 +7,11 @@ import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.zhaizz.mapper.ExcelDocumentMapper;
-import top.zhaizz.mapper.ExcelSheetChunkMapper;
 import top.zhaizz.mapper.ExcelSheetMapper;
-import top.zhaizz.pojo.vo.DocumentDetailVo;
-import top.zhaizz.pojo.vo.PageQueryVo;
-import top.zhaizz.pojo.vo.SheetChunkLoadAllCelldataVO;
+import top.zhaizz.pojo.VO.ExcelDocumentDetailVo;
+import top.zhaizz.pojo.VO.PageQueryVo;
 import top.zhaizz.pojo.entity.ExcelDocument;
 import top.zhaizz.pojo.entity.ExcelSheet;
-import top.zhaizz.pojo.entity.ExcelSheetChunk;
 import top.zhaizz.service.ExcelDocumentService;
 
 import java.util.ArrayList;
@@ -28,8 +25,6 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
     private ExcelDocumentMapper excelDocumentMapper;
     @Autowired
     private ExcelSheetMapper excelSheetMapper;
-    @Autowired
-    private ExcelSheetChunkMapper excelSheetChunkMapper;
 
     /**
      * 文档列表（分页，仅元数据，不含单元格数据）
@@ -44,9 +39,6 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
         PageHelper.startPage(pageNum, pageSize);
         // 执行查询（PageHelper 会自动拦截，返回分页后的数据）
         List<ExcelDocument> list = excelDocumentMapper.list();
-        if (list.isEmpty()) {
-            return null;
-        }
         // PageInfo 封装了 total, pages, pageNum 等完整分页信息
         PageInfo<ExcelDocument> pageInfo = new PageInfo<>(list);
         // 转换为统一的分页 VO 返回
@@ -65,11 +57,8 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
      * @return 文档详情
      */
     @Override
-    public DocumentDetailVo detail(long id) {
+    public ExcelDocumentDetailVo detail(long id) {
         ExcelDocument document = excelDocumentMapper.getById(id);
-        if (document == null) {
-            return null;
-        }
 
         List<ExcelSheet> sheets = excelSheetMapper.listSheetsByDocumentId(id);
 
@@ -111,52 +100,13 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
             sheetInfoList.add(info);
         }
 
-        return DocumentDetailVo.builder()
+        return ExcelDocumentDetailVo.builder()
                 .id(document.getId())
                 .name(document.getName())
                 .sheetCount(document.getSheetCount())
                 .version(document.getVersion())
                 .sheets(sheetInfoList)
                 .build();
-    }
-
-    /**
-     * 加载指定 Sheet 的全部 celldata（合并所有分块返回）
-     *
-     * @param id      文档 ID
-     * @param sheetId Sheet ID
-     * @return 全部 celldata 列表
-     */
-    @Override
-    public SheetChunkLoadAllCelldataVO loadAllCelldata(long id, long sheetId) {
-        List<ExcelSheetChunk> excelSheetChunkList = excelSheetChunkMapper.listSheetsChunkById(id, sheetId);
-        if (excelSheetChunkList.isEmpty()) {
-            return null;
-        }
-
-        SheetChunkLoadAllCelldataVO result = null;
-        for (ExcelSheetChunk s : excelSheetChunkList) {
-            List<Object> celldata = parseArrayOrEmpty(s.getCelldataJson());
-            int cellCount = celldata.size();
-
-            result = SheetChunkLoadAllCelldataVO.builder()
-                    .sheetId(sheetId)
-                    .celldata(celldata)
-                    .cellCount(cellCount)
-                    .build();
-        }
-        return result;
-    }
-
-    /**
-     * 批量更新指定文档的单元格数据
-     *
-     * @param id      文档 ID
-     * @param updates 单元格修改列表：[{"sheetId": 1, "r": 0, "c": 1, "v": {...}}, ...]
-     */
-    @Override
-    public void batchUpdateCells(long id, List<Map<String, Object>> updates) {
-
     }
 
     /**

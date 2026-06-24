@@ -29,7 +29,7 @@ public class Result<T> {
         return result;
     }
 
-    public static <T> Result<T> fail(String message) {
+    public static <T> Result<T> error(String message) {
         Result<T> result = new Result<>();
         result.code = 500;
         result.success = false;
@@ -37,8 +37,8 @@ public class Result<T> {
         return result;
     }
 
-    public static <T> Result<T> fail(int code, String message) {
-        Result<T> result = fail(message);
+    public static <T> Result<T> error(int code, String message) {
+        Result<T> result = error(message);
         result.code = code;
         return result;
     }

@@ -1,4 +1,4 @@
-package top.zhaizz.pojo.vo;
+package top.zhaizz.pojo.VO;
 
 import lombok.*;
 
@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文档详情查询返回类
+ * 文档详情
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentDetailVo {
-    /** 文档ID */
+public class ExcelDocumentDetailVo {
+    /** 主键 */
     private Long id;
 
     /** 文档名称 */
