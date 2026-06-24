@@ -12,7 +12,7 @@ public interface ExcelDocumentMapper {
      *
      * @return 查询结果
      */
-    @Select("select * from excel_document")
+    @Select("select * from excel_document order by update_time desc")
     List<ExcelDocument> list();
 
     /**

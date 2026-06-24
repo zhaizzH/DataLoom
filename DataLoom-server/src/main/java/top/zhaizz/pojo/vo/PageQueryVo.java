@@ -1,4 +1,4 @@
-package top.zhaizz.pojo.VO;
+package top.zhaizz.pojo.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 
 /**
  * Excel 文档主表实体（仅存元数据）
- * <p>
  * 重新设计说明：移除了原来的 {@code sheetDataJson} 字段。
  * 单元格数据现在由 {@link ExcelSheet} + {@link ExcelSheetChunk} 分块管理，
  * 彻底解决十万级数据下单行存储过大的问题。

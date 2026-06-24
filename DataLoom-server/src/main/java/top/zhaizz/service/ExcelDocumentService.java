@@ -1,7 +1,11 @@
 package top.zhaizz.service;
 
-import top.zhaizz.pojo.VO.ExcelDocumentDetailVo;
-import top.zhaizz.pojo.VO.PageQueryVo;
+import top.zhaizz.pojo.vo.DocumentDetailVo;
+import top.zhaizz.pojo.vo.PageQueryVo;
+import top.zhaizz.pojo.vo.SheetChunkLoadAllCelldataVO;
+
+import java.util.List;
+import java.util.Map;
 
 public interface ExcelDocumentService {
 
@@ -20,5 +24,22 @@ public interface ExcelDocumentService {
      * @param id 查询文档id
      * @return 文档详情
      */
-    ExcelDocumentDetailVo detail(long id);
+    DocumentDetailVo detail(long id);
+
+    /**
+     * 加载指定 Sheet 的全部 celldata（合并所有分块返回）
+     *
+     * @param id 文档 ID
+     * @param sheetId Sheet ID
+     * @return 全部 celldata 列表
+     */
+    SheetChunkLoadAllCelldataVO loadAllCelldata(long id, long sheetId);
+
+    /**
+     * 批量更新指定文档的单元格数据
+     *
+     * @param id      文档 ID
+     * @param updates 单元格修改列表：[{"sheetId": 1, "r": 0, "c": 1, "v": {...}}, ...]
+     */
+    void batchUpdateCells(long id, List<Map<String, Object>> updates);
 }
