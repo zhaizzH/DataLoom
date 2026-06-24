@@ -1,4 +1,4 @@
-package top.zhaizz.pojo.VO;
+package top.zhaizz.pojo.vo;
 
 import lombok.*;
 
@@ -12,7 +12,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExcelDocumentDetailVo {
+public class DocumentDetailVO {
     /** 主键 */
     private Long id;
 

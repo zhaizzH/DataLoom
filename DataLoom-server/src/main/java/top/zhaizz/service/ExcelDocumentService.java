@@ -1,24 +1,29 @@
 package top.zhaizz.service;
 
-import top.zhaizz.pojo.VO.ExcelDocumentDetailVo;
-import top.zhaizz.pojo.VO.PageQueryVo;
+import top.zhaizz.pojo.entity.ExcelSheetChunk;
+import top.zhaizz.pojo.vo.AllCelldataVO;
+import top.zhaizz.pojo.vo.DocumentDetailVO;
+import top.zhaizz.pojo.vo.PageQueryVO;
+
+import java.util.List;
+import java.util.Map;
 
 public interface ExcelDocumentService {
 
     /**
-     * 文档列表（分页，仅元数据，不含单元格数据）
+     * 分页查询所有文档
      *
      * @param pageNum  页码，默认 1
      * @param pageSize 每页条数，默认 20
      * @return 分页结果，包含总条数、总页数、当前页码、每页条数、记录列表
      */
-    PageQueryVo list(int pageNum, int pageSize);
+    PageQueryVO list(int pageNum, int pageSize);
 
     /**
-     * 文档详情 — 含各 Sheet 元信息（config / chart / images / hyperlink 等），不含 celldata
+     * 重命名指定文档
      *
-     * @param id 查询文档id
-     * @return 文档详情
+     * @param id   文档id
+     * @param body 新文件名
      */
-    ExcelDocumentDetailVo detail(long id);
+    void rename(long id, Map<String, String> body);
 }

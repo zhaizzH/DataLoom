@@ -1,4 +1,4 @@
-package top.zhaizz.pojo.VO;
+package top.zhaizz.pojo.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageQueryVo {
+public class PageQueryVO {
     /** 总记录数 */
     private Long total;
     /** 总页数 */
