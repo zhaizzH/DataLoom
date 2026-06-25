@@ -1,0 +1,9 @@
+# MySQL数据源配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    host: 你的数据库主机地址
+    port: 3306
+    database: 你的数据库名称
+    username: 你的数据库用户名
+    password: 你的数据库密码

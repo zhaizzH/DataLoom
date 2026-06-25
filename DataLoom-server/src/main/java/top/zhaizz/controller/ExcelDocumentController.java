@@ -2,10 +2,13 @@ package top.zhaizz.controller;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import top.zhaizz.common.Result;
+import top.zhaizz.pojo.dto.CellUpdateDTO;
+import top.zhaizz.pojo.dto.RenameDTO;
 import top.zhaizz.pojo.vo.AllCelldataVO;
 import top.zhaizz.pojo.vo.DocumentDetailVO;
 import top.zhaizz.pojo.vo.PageQueryVO;
@@ -14,7 +17,6 @@ import top.zhaizz.service.ExcelSheetChunkService;
 import top.zhaizz.service.ExcelSheetService;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Excel 文档接口 — 文档 CRUD + 工作簿保存 + 单元格批量更新
@@ -89,7 +91,7 @@ public class ExcelDocumentController {
      */
     @PutMapping("/{id}/cells/batch")
     @ApiOperation("批量增量更新单元格")
-    public Result<?> batchUpdateCells(@PathVariable long id, @RequestBody List<Map<String, Object>> updates) {
+    public Result<?> batchUpdateCells(@PathVariable long id, @RequestBody List<CellUpdateDTO> updates) {
         try {
             log.info("批量增量更新单元格: id[{}]", id);
             if (updates == null || updates.isEmpty()) {
@@ -106,18 +108,15 @@ public class ExcelDocumentController {
     /**
      * 重命名文档
      *
-     * @param id   文档 ID
-     * @param body {"name": "新名称"}
+     * @param id        文档 ID
+     * @param renameDTO 重命名 DTO
      */
     @PutMapping("/{id}/name")
     @ApiOperation("重命名文档")
-    public Result<?> rename(@PathVariable long id, @RequestBody Map<String, String> body) {
-        log.info("重命名文档: id[{}],name: [{}]", id, body);
-        if (body == null || body.isEmpty()) {
-            return Result.fail("名称不能为空");
-        }
-        excelDocumentService.rename(id, body);
-        return Result.success(";重命名成功");
+    public Result<?> rename(@PathVariable long id, @Valid @RequestBody RenameDTO renameDTO) {
+        log.info("重命名文档: id[{}],name: [{}]", id, renameDTO.getName());
+        excelDocumentService.rename(id, renameDTO);
+        return Result.success("重命名成功");
     }
 
     /**
@@ -129,9 +128,7 @@ public class ExcelDocumentController {
     @ApiOperation("删除文档")
     public Result<?> delete(@PathVariable long id) {
         log.info("删除文档: id[{}]", id);
-        excelDocumentService.delete(id); // 删除文档主记录
-        excelSheetService.delete(id); // 软删除文档Sheet
-        excelSheetChunkService.delete(id); // 物理删除Chunk
+        excelDocumentService.deleteDocument(id);
         return Result.success("删除成功");
     }
 }

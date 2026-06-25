@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class util {
+public class ExcelUtil {
     /**
      * 安全解析 JSON 对象，null / 空串 / 解析异常 → 返回空 JSONObject
      */
@@ -174,11 +174,28 @@ public class util {
 
     /**
      * 构建列宽配置 JSON（Luckysheet columnlen 格式）
+     * 只遍历有数据的列，避免对大量空列调用 getColumnWidthInPixels
      */
     public static JSONObject buildColumnLen(Sheet sheet, int maxCol) {
         JSONObject colWidths = new JSONObject();
         try {
-            for (int ci = 0; ci < maxCol; ci++) {
+            // 先扫描所有行，收集实际有数据的列索引
+            java.util.Set<Integer> dataColumns = new java.util.HashSet<>();
+            for (Row row : sheet) {
+                if (row == null) continue;
+                short lastCell = row.getLastCellNum();
+                for (int ci = 0; ci < lastCell; ci++) {
+                    Cell cell = row.getCell(ci);
+                    if (cell != null && cell.getCellType() != CellType.BLANK) {
+                        dataColumns.add(ci);
+                    }
+                }
+            }
+
+            // 只对有数据的列获取宽度，上限取 maxCol 与数据列最大值的较小值
+            int effectiveMaxCol = Math.min(maxCol, dataColumns.isEmpty() ? 0
+                    : dataColumns.stream().mapToInt(Integer::intValue).max().getAsInt() + 1);
+            for (int ci = 0; ci < effectiveMaxCol; ci++) {
                 double width = sheet.getColumnWidthInPixels(ci);
                 colWidths.put(String.valueOf(ci), (int) Math.max(width, 72));
             }

@@ -10,12 +10,14 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import top.zhaizz.mapper.ExcelDocumentMapper;
-import top.zhaizz.pojo.vo.CreateVo;
-import top.zhaizz.pojo.vo.PageQueryVO;
+import top.zhaizz.pojo.dto.RenameDTO;
 import top.zhaizz.pojo.entity.ExcelDocument;
 import top.zhaizz.pojo.entity.ExcelSheet;
+import top.zhaizz.pojo.vo.CreateVo;
+import top.zhaizz.pojo.vo.PageQueryVO;
 import top.zhaizz.service.ExcelDocumentService;
 import top.zhaizz.service.ExcelSheetChunkService;
 import top.zhaizz.service.ExcelSheetService;
@@ -24,9 +26,12 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import static top.zhaizz.common.util.buildSheetInfoList;
+import static top.zhaizz.common.ExcelUtil.buildSheetInfoList;
 
 @Service
 @Slf4j
@@ -68,12 +73,12 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
     /**
      * 重命名指定文档
      *
-     * @param id   文档id
-     * @param body 新文件名
+     * @param id         文档id
+     * @param renameDTO  重命名 DTO
      */
     @Override
-    public void rename(long id, Map<String, String> body) {
-        ExcelDocument excelDocument = ExcelDocument.builder().id(id).name(body.get("name")).build();
+    public void rename(long id, RenameDTO renameDTO) {
+        ExcelDocument excelDocument = ExcelDocument.builder().id(id).name(renameDTO.getName()).build();
         excelDocumentMapper.updateById(excelDocument);
     }
 
@@ -103,19 +108,44 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
     }
 
     /**
+     * 删除文档（含 Sheet 和 Chunk），带事务控制
+     *
+     * @param id 文档ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteDocument(long id) {
+        delete(id);                  // 删除文档主记录
+        excelSheetService.delete(id); // 软删除文档 Sheet
+        excelSheetChunkService.delete(id); // 物理删除 Chunk
+    }
+
+    /**
      * 创建文档记录（初始化时不含 sheetCount/sheetNames，解析完成后调用 updateSheetMeta 更新）
      *
      * @param file 上传的文件
      */
     @Override
     public CreateVo create(MultipartFile file) {
+        // ===== 文件校验 =====
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("上传文件不能为空");
+        }
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isBlank()) {
+            throw new IllegalArgumentException("文件名不能为空");
+        }
+        if (!originalName.endsWith(".xlsx") && !originalName.endsWith(".xls")) {
+            throw new IllegalArgumentException("仅支持 Excel 文件（.xlsx / .xls）");
+        }
+
+        Path filePath = null;
         try {
             // 保存原始文件
-            String originalName = file.getOriginalFilename();
             String savedName = UUID.randomUUID() + "_" + originalName;
             Path dir = Paths.get(uploadPath).toAbsolutePath().normalize();
             if (!Files.exists(dir)) Files.createDirectories(dir);
-            Path filePath = dir.resolve(savedName);
+            filePath = dir.resolve(savedName);
             file.transferTo(filePath.toFile());
 
             // 插入文档主记录（获取 documentId 供分块写入时使用）
@@ -133,8 +163,9 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
             excelDocumentMapper.insert(excelDocument);
 
             // 流式解析 + 分块写库（核心改造点）
-            List<ExcelSheet> sheets =new ArrayList<>();
-            try (Workbook workbook = WorkbookFactory.create(new FileInputStream(filePath.toFile()))) {
+            List<ExcelSheet> sheets = new ArrayList<>();
+            try (FileInputStream fis = new FileInputStream(filePath.toFile());
+                 Workbook workbook = WorkbookFactory.create(fis)) {
                 int sheetTotal = workbook.getNumberOfSheets();
                 log.info("开始解析文档 [{}], 共 {} 个 Sheet", excelDocument.getName(), sheetTotal);
 
@@ -142,14 +173,13 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
                     Sheet sheet = workbook.getSheetAt(si);
                     log.info("  → 解析 Sheet[{}]: {}", si, sheet.getSheetName());
 
-                    ExcelSheet sheetEntity = excelSheetService.saveSheetMeta(sheet, excelDocument, si, sheetTotal);
+                    ExcelSheet sheetEntity = excelSheetService.saveSheetMeta(sheet, excelDocument, si);
                     sheets.add(sheetEntity);
 
                     excelSheetChunkService.saveSheetChunks(sheet, workbook, sheetEntity);
                 }
             }
             log.info("文档 [{}] 解析完成，共 {} 个 Sheet", excelDocument.getName(), sheets.size());
-
 
             // 更新文档的 sheetCount / sheetNames
             List<String> sheetNames = new ArrayList<>();
@@ -170,8 +200,16 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
                     .build();
 
         } catch (Exception e) {
-            log.error("文件保存失败");
-            return null;
+            log.error("文件保存失败", e);
+            // 清理已保存的脏文件
+            if (filePath != null) {
+                try {
+                    Files.deleteIfExists(filePath);
+                } catch (Exception ex) {
+                    log.warn("清理脏文件失败: {}", ex.getMessage());
+                }
+            }
+            throw new RuntimeException("文件处理失败: " + e.getMessage(), e);
         }
     }
 

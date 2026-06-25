@@ -1,10 +1,9 @@
 package top.zhaizz.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import top.zhaizz.pojo.dto.RenameDTO;
 import top.zhaizz.pojo.vo.CreateVo;
 import top.zhaizz.pojo.vo.PageQueryVO;
-
-import java.util.Map;
 
 public interface ExcelDocumentService {
 
@@ -20,10 +19,10 @@ public interface ExcelDocumentService {
     /**
      * 重命名指定文档
      *
-     * @param id   文档id
-     * @param body 新文件名
+     * @param id         文档id
+     * @param renameDTO  重命名 DTO
      */
-    void rename(long id, Map<String, String> body);
+    void rename(long id, RenameDTO renameDTO);
 
     /**
      * 删除文档主记录
@@ -31,6 +30,13 @@ public interface ExcelDocumentService {
      * @param id 文档ID
      */
     void delete(long id);
+
+    /**
+     * 删除文档（含 Sheet 和 Chunk），带事务控制
+     *
+     * @param id 文档ID
+     */
+    void deleteDocument(long id);
 
     /**
      * 创建文档记录（初始化时不含 sheetCount/sheetNames，解析完成后调用 updateSheetMeta 更新）

@@ -2,11 +2,11 @@ package top.zhaizz.service;
 
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import top.zhaizz.pojo.dto.CellUpdateDTO;
 import top.zhaizz.pojo.entity.ExcelSheet;
 import top.zhaizz.pojo.vo.AllCelldataVO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface ExcelSheetChunkService {
     /**
@@ -24,7 +24,7 @@ public interface ExcelSheetChunkService {
      * @param id      文档id
      * @param updates 更新数据
      */
-    void batchUpdateCells(long id, List<Map<String, Object>> updates);
+    void batchUpdateCells(long id, List<CellUpdateDTO> updates);
 
     /**
      * 物理删除 Chunk

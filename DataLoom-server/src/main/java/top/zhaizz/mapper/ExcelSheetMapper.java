@@ -13,7 +13,7 @@ public interface ExcelSheetMapper {
      * @param id 文档 ID
      * @return 所有 Sheet 列表
      */
-    @Select("select * from excel_sheet where id = #{id}")
+    @Select("select * from excel_sheet where document_id = #{id} and status = 1")
     List<ExcelSheet> listSheetsByDocumentId(long id);
 
     /**

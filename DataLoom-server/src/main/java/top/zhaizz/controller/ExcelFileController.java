@@ -41,9 +41,6 @@ public class ExcelFileController {
         try {
             log.info("上传文件参数: {}", file);
             CreateVo result = documentService.create(file);
-            if (result == null) {
-                return Result.fail("上传失败");
-            }
             return Result.success("上传成功", result);
         } catch (Exception e) {
             log.error("上传失败", e);

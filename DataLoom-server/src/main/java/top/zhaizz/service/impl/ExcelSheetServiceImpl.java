@@ -11,12 +11,13 @@ import top.zhaizz.pojo.entity.ExcelDocument;
 import top.zhaizz.pojo.entity.ExcelSheet;
 import top.zhaizz.pojo.vo.DocumentDetailVO;
 import top.zhaizz.service.ExcelSheetService;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static top.zhaizz.common.util.*;
+import static top.zhaizz.common.ExcelUtil.*;
 
 @Service
 @Slf4j
@@ -97,7 +98,7 @@ public class ExcelSheetServiceImpl implements ExcelSheetService {
     }
 
     @Override
-    public ExcelSheet saveSheetMeta(Sheet sheet, ExcelDocument document, int sheetIndex, int totalSheets) {
+    public ExcelSheet saveSheetMeta(Sheet sheet, ExcelDocument document, int sheetIndex) {
         ExcelSheet sheetEntity = new ExcelSheet();
         sheetEntity.setDocumentId(document.getId());
         sheetEntity.setSheetIndex(sheetIndex);

@@ -29,6 +29,18 @@ public class Result<T> {
         return result;
     }
 
+    /**
+     * 返回成功消息（无数据）
+     */
+    public static Result<Void> success(String message) {
+        Result<Void> result = new Result<>();
+        result.code = 200;
+        result.success = true;
+        result.message = message;
+        result.data = null;
+        return result;
+    }
+
     public static <T> Result<T> fail(String message) {
         Result<T> result = new Result<>();
         result.code = 500;

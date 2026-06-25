@@ -8,17 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.zhaizz.mapper.ExcelSheetChunkMapper;
 import top.zhaizz.mapper.ExcelSheetMapper;
+import top.zhaizz.pojo.dto.CellUpdateDTO;
 import top.zhaizz.pojo.entity.ExcelSheet;
 import top.zhaizz.pojo.entity.ExcelSheetChunk;
 import top.zhaizz.pojo.vo.AllCelldataVO;
 import top.zhaizz.service.ExcelSheetChunkService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static top.zhaizz.common.util.*;
+import static top.zhaizz.common.ExcelUtil.*;
 
 @Service
 @Slf4j
@@ -41,21 +39,23 @@ public class ExcelSheetChunkServiceImpl implements ExcelSheetChunkService {
      */
     @Override
     public AllCelldataVO loadAllCelldata(long id, long sheetId) {
-        ExcelSheetChunk chunk = excelSheetChunkMapper.getByIdAndSheetId(id, sheetId);
-        if (chunk == null) {
+        List<ExcelSheetChunk> chunks = excelSheetChunkMapper.listByDocumentIdAndSheetId(id, sheetId);
+        if (chunks == null || chunks.isEmpty()) {
             return null;
         }
 
         List<Object> celldata = new ArrayList<>();
-        for (Object o : parseArrayOrEmpty(chunk.getCelldataJson())) {
-            JSONObject cell = parseObjectOrEmpty(o.toString());
-            if (!cell.isEmpty()) {
-                celldata.add(cell);
+        for (ExcelSheetChunk chunk : chunks) {
+            for (Object o : parseArrayOrEmpty(chunk.getCelldataJson())) {
+                JSONObject cell = parseObjectOrEmpty(o.toString());
+                if (!cell.isEmpty()) {
+                    celldata.add(cell);
+                }
             }
         }
 
         return AllCelldataVO.builder()
-                .sheetId(chunk.getSheetId())
+                .sheetId(chunks.get(0).getSheetId())
                 .celldata(celldata)
                 .cellCount(celldata.size())
                 .build();
@@ -68,16 +68,15 @@ public class ExcelSheetChunkServiceImpl implements ExcelSheetChunkService {
      * @param updates 更新数据
      */
     @Override
-    public void batchUpdateCells(long id, List<Map<String, Object>> updates) {
-        Map<Long, List<Map<String, Object>>> updatesBySheet = new HashMap<>();
-        for (Map<String, Object> update : updates) {
-            long sheetId = ((Number) update.get("sheetId")).longValue();
-            updatesBySheet.computeIfAbsent(sheetId, k -> new ArrayList<>()).add(update);
+    public void batchUpdateCells(long id, List<CellUpdateDTO> updates) {
+        Map<Long, List<CellUpdateDTO>> updatesBySheet = new HashMap<>();
+        for (CellUpdateDTO update : updates) {
+            updatesBySheet.computeIfAbsent(update.getSheetId(), k -> new ArrayList<>()).add(update);
         }
 
-        for (Map.Entry<Long, List<Map<String, Object>>> entry : updatesBySheet.entrySet()) {
+        for (Map.Entry<Long, List<CellUpdateDTO>> entry : updatesBySheet.entrySet()) {
             long sheetId = entry.getKey();
-            List<Map<String, Object>> sheetUpdates = entry.getValue();
+            List<CellUpdateDTO> sheetUpdates = entry.getValue();
 
             List<ExcelSheetChunk> chunks = excelSheetChunkMapper.listByDocumentIdAndSheetId(id, sheetId);
             if (chunks == null || chunks.isEmpty()) {
@@ -85,10 +84,12 @@ public class ExcelSheetChunkServiceImpl implements ExcelSheetChunkService {
                 continue;
             }
 
-            for (Map<String, Object> cellUpdate : sheetUpdates) {
-                int r = ((Number) cellUpdate.get("r")).intValue();
-                int c = ((Number) cellUpdate.get("c")).intValue();
-                Object v = cellUpdate.get("v");
+            Set<Long> dirtyChunkIds = new HashSet<>();
+
+            for (CellUpdateDTO cellUpdate : sheetUpdates) {
+                int r = cellUpdate.getR();
+                int c = cellUpdate.getC();
+                Object v = cellUpdate.getV();
 
                 ExcelSheetChunk targetChunk = null;
                 for (ExcelSheetChunk chunk : chunks) {
@@ -150,10 +151,14 @@ public class ExcelSheetChunkServiceImpl implements ExcelSheetChunkService {
                 }
 
                 targetChunk.setCelldataJson(celldata.toJSONString());
+                dirtyChunkIds.add(targetChunk.getId());
             }
 
+            // 只更新被修改过的 chunk，避免 N+1 无效 UPDATE
             for (ExcelSheetChunk chunk : chunks) {
-                excelSheetChunkMapper.updateCelldataJson(chunk);
+                if (dirtyChunkIds.contains(chunk.getId())) {
+                    excelSheetChunkMapper.updateCelldataJson(chunk);
+                }
             }
 
             log.info("文档[{}] Sheet[{}] 更新完成，涉及 {} 个单元格", id, sheetId, sheetUpdates.size());
