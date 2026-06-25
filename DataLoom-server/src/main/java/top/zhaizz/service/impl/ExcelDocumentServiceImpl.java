@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static top.zhaizz.common.util.buildSheetInfoList;
@@ -74,7 +73,7 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
      */
     @Override
     public void rename(long id, Map<String, String> body) {
-        ExcelDocument excelDocument = ExcelDocument.builder().id(id).name(body.get("name")).updateTime(LocalDateTime.now()).build();
+        ExcelDocument excelDocument = ExcelDocument.builder().id(id).name(body.get("name")).build();
         excelDocumentMapper.updateById(excelDocument);
     }
 
@@ -99,7 +98,7 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
         }
 
         // 更新文档主记录状态为已删除
-        ExcelDocument excelDocument = ExcelDocument.builder().id(id).status(3).updateTime(LocalDateTime.now()).build();
+        ExcelDocument excelDocument = ExcelDocument.builder().id(id).status(3).build();
         excelDocumentMapper.updateById(excelDocument);
     }
 
@@ -120,6 +119,7 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
             file.transferTo(filePath.toFile());
 
             // 插入文档主记录（获取 documentId 供分块写入时使用）
+            // createTime / updateTime 由 @AutoFill(INSERT) AOP 自动填充
             ExcelDocument excelDocument = ExcelDocument.builder()
                     .name(originalName)
                     .filePath(filePath.toString())
@@ -128,8 +128,6 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
                     .status(1)
                     .version(1L)
                     .sheetCount(0)
-                    .createTime(LocalDateTime.now())
-                    .updateTime(LocalDateTime.now())
                     .build();
 
             excelDocumentMapper.insert(excelDocument);
@@ -186,11 +184,11 @@ public class ExcelDocumentServiceImpl implements ExcelDocumentService {
      */
     @Override
     public void updateSheetMeta(Long id, int sheetCount, String sheetNames) {
+        // updateTime 由 @AutoFill(UPDATE) AOP 自动填充
         ExcelDocument excelDocument = ExcelDocument.builder()
                 .id(id)
                 .sheetCount(sheetCount)
                 .sheetNames(sheetNames)
-                .updateTime(LocalDateTime.now())
                 .build();
         excelDocumentMapper.updateById(excelDocument);
     }

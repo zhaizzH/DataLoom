@@ -1,6 +1,7 @@
 package top.zhaizz.mapper;
 
 import org.apache.ibatis.annotations.Select;
+import top.zhaizz.common.annotation.AutoFill;
 import top.zhaizz.pojo.entity.ExcelSheet;
 
 import java.util.List;
@@ -20,13 +21,15 @@ public interface ExcelSheetMapper {
      *
      * @param excelSheet Sheet 实体
      */
-    void updateByDocumentId(ExcelSheet excelSheet); // TODO 待添加AOP
+    @AutoFill(AutoFill.OperationType.UPDATE)
+    void updateByDocumentId(ExcelSheet excelSheet);
 
     /**
      * 插入 Sheet 实体
      *
      * @param sheetEntity Sheet 实体
      */
+    @AutoFill(AutoFill.OperationType.INSERT)
     void insert(ExcelSheet sheetEntity);
 
 }

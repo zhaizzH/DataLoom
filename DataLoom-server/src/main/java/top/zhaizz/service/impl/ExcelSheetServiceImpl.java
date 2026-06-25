@@ -11,8 +11,6 @@ import top.zhaizz.pojo.entity.ExcelDocument;
 import top.zhaizz.pojo.entity.ExcelSheet;
 import top.zhaizz.pojo.vo.DocumentDetailVO;
 import top.zhaizz.service.ExcelSheetService;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -133,9 +131,7 @@ public class ExcelSheetServiceImpl implements ExcelSheetService {
         // chunkCount 先设 0，等分块写入后再更新
         sheetEntity.setChunkCount(0);
 
-        sheetEntity.setCreateTime(LocalDateTime.now());
-        sheetEntity.setUpdateTime(LocalDateTime.now());
-
+        // createTime / updateTime 由 @AutoFill(INSERT) AOP 自动填充
         excelSheetMapper.insert(sheetEntity);
         log.info("Sheet 元信息已保存: id={}, rows={}, cols={}", sheetEntity.getId(), maxRow + 1, maxCol);
         return sheetEntity;

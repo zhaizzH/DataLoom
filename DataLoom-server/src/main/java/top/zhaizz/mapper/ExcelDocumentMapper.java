@@ -1,6 +1,7 @@
 package top.zhaizz.mapper;
 
 import org.apache.ibatis.annotations.Select;
+import top.zhaizz.common.annotation.AutoFill;
 import top.zhaizz.pojo.entity.ExcelDocument;
 
 import java.util.List;
@@ -29,12 +30,14 @@ public interface ExcelDocumentMapper {
      *
      * @param excelDocument 文档实体
      */
-    void updateById(ExcelDocument excelDocument); // TODO 待添加AOP
+    @AutoFill(AutoFill.OperationType.UPDATE)
+    void updateById(ExcelDocument excelDocument);
 
     /**
      * 创建文档记录
      *
      * @param excelDocument 文档实体
      */
-    void insert(ExcelDocument excelDocument); // TODO 待添加AOP
+    @AutoFill(AutoFill.OperationType.INSERT)
+    void insert(ExcelDocument excelDocument);
 }

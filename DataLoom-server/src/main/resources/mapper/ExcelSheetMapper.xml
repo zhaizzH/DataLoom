@@ -11,13 +11,13 @@
         update excel_sheet
         <set>
             <if test="chunkCount!=null">
-                chunk_count = #{chunkCount}
+                chunk_count = #{chunkCount},
             </if>
             <if test="status != null">
-                status = #{status}
+                status = #{status},
             </if>
             <if test="updateTime != null">
-                update_time = #{updateTime}
+                update_time = #{updateTime},
             </if>
         </set>
         where document_id = #{documentId}

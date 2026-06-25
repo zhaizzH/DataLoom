@@ -14,6 +14,7 @@ import top.zhaizz.pojo.vo.AllCelldataVO;
 import top.zhaizz.service.ExcelSheetChunkService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,7 +69,95 @@ public class ExcelSheetChunkServiceImpl implements ExcelSheetChunkService {
      */
     @Override
     public void batchUpdateCells(long id, List<Map<String, Object>> updates) {
+        Map<Long, List<Map<String, Object>>> updatesBySheet = new HashMap<>();
+        for (Map<String, Object> update : updates) {
+            long sheetId = ((Number) update.get("sheetId")).longValue();
+            updatesBySheet.computeIfAbsent(sheetId, k -> new ArrayList<>()).add(update);
+        }
 
+        for (Map.Entry<Long, List<Map<String, Object>>> entry : updatesBySheet.entrySet()) {
+            long sheetId = entry.getKey();
+            List<Map<String, Object>> sheetUpdates = entry.getValue();
+
+            List<ExcelSheetChunk> chunks = excelSheetChunkMapper.listByDocumentIdAndSheetId(id, sheetId);
+            if (chunks == null || chunks.isEmpty()) {
+                log.warn("文档[{}] Sheet[{}] 无分块数据，跳过更新", id, sheetId);
+                continue;
+            }
+
+            for (Map<String, Object> cellUpdate : sheetUpdates) {
+                int r = ((Number) cellUpdate.get("r")).intValue();
+                int c = ((Number) cellUpdate.get("c")).intValue();
+                Object v = cellUpdate.get("v");
+
+                ExcelSheetChunk targetChunk = null;
+                for (ExcelSheetChunk chunk : chunks) {
+                    if (r >= chunk.getRowStart() && r <= chunk.getRowEnd()) {
+                        targetChunk = chunk;
+                        break;
+                    }
+                }
+
+                if (targetChunk == null) {
+                    ExcelSheetChunk lastChunk = chunks.getLast();
+                    if (r > lastChunk.getRowEnd()) {
+                        int newChunkIndex = lastChunk.getChunkIndex() + 1;
+                        int newRowStart = (r / CHUNK_SIZE) * CHUNK_SIZE;
+                        int newRowEnd = newRowStart + CHUNK_SIZE - 1;
+
+                        ExcelSheetChunk newChunk = ExcelSheetChunk.builder()
+                                .documentId(id)
+                                .sheetId(sheetId)
+                                .chunkIndex(newChunkIndex)
+                                .rowStart(newRowStart)
+                                .rowEnd(newRowEnd)
+                                .celldataJson("[]")
+                                .build();
+                        excelSheetChunkMapper.insert(newChunk);
+                        chunks.add(newChunk);
+                        targetChunk = newChunk;
+                        log.info("文档[{}] Sheet[{}] 新建 Chunk[{}]: rows {}-{}", id, sheetId, newChunkIndex, newRowStart, newRowEnd);
+                    } else {
+                        log.warn("文档[{}] Sheet[{}] 行{} 无对应分块，跳过", id, sheetId, r);
+                        continue;
+                    }
+                }
+
+                JSONArray celldata = parseArrayOrEmpty(targetChunk.getCelldataJson());
+                boolean found = false;
+                JSONObject newCellItem = new JSONObject();
+                newCellItem.put("r", r);
+                newCellItem.put("c", c);
+                newCellItem.put("v", v);
+
+                for (int i = 0; i < celldata.size(); i++) {
+                    JSONObject existing = celldata.getJSONObject(i);
+                    if (existing != null
+                            && existing.getIntValue("r") == r
+                            && existing.getIntValue("c") == c) {
+                        if (v == null) {
+                            celldata.remove(i);
+                        } else {
+                            celldata.set(i, newCellItem);
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found && v != null) {
+                    celldata.add(newCellItem);
+                }
+
+                targetChunk.setCelldataJson(celldata.toJSONString());
+            }
+
+            for (ExcelSheetChunk chunk : chunks) {
+                excelSheetChunkMapper.updateCelldataJson(chunk);
+            }
+
+            log.info("文档[{}] Sheet[{}] 更新完成，涉及 {} 个单元格", id, sheetId, sheetUpdates.size());
+        }
     }
 
     /**
