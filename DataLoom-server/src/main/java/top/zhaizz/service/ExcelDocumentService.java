@@ -1,11 +1,9 @@
 package top.zhaizz.service;
 
-import top.zhaizz.pojo.entity.ExcelSheetChunk;
-import top.zhaizz.pojo.vo.AllCelldataVO;
-import top.zhaizz.pojo.vo.DocumentDetailVO;
+import org.springframework.web.multipart.MultipartFile;
+import top.zhaizz.pojo.vo.CreateVo;
 import top.zhaizz.pojo.vo.PageQueryVO;
 
-import java.util.List;
 import java.util.Map;
 
 public interface ExcelDocumentService {
@@ -26,4 +24,27 @@ public interface ExcelDocumentService {
      * @param body 新文件名
      */
     void rename(long id, Map<String, String> body);
+
+    /**
+     * 删除文档主记录
+     *
+     * @param id 文档ID
+     */
+    void delete(long id);
+
+    /**
+     * 创建文档记录（初始化时不含 sheetCount/sheetNames，解析完成后调用 updateSheetMeta 更新）
+     *
+     * @param file 上传的文件
+     */
+    CreateVo create(MultipartFile file);
+
+    /**
+     * 解析完成后更新文档的 Sheet 数量和名称列表
+     *
+     * @param id      文档 ID
+     * @param sheetCount Sheet 数量
+     * @param sheetNames Sheet 名称列表 JSON 字符串（如 ["Sheet1","Sheet2"]）
+     */
+    void updateSheetMeta(Long id, int sheetCount, String sheetNames);
 }

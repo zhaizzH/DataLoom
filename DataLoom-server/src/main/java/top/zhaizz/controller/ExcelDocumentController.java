@@ -98,6 +98,7 @@ public class ExcelDocumentController {
             excelSheetChunkService.batchUpdateCells(id, updates);// TODO 待实现
             return Result.success("保存成功");
         } catch (Exception e) {
+            log.error("保存失败: ", e);
             return Result.fail("保存失败: " + e.getMessage());
         }
     }
@@ -111,15 +112,26 @@ public class ExcelDocumentController {
     @PutMapping("/{id}/name")
     @ApiOperation("重命名文档")
     public Result<?> rename(@PathVariable long id, @RequestBody Map<String, String> body) {
-        try {
-            log.info("重命名文档: id[{}],name: [{}]", id, body);
-            if (body == null || body.isEmpty()) {
-                return Result.fail("名称不能为空");
-            }
-            excelDocumentService.rename(id, body);
-            return Result.success(";重命名成功");
-        } catch (Exception e) {
-            return Result.fail("文档不存在");
+        log.info("重命名文档: id[{}],name: [{}]", id, body);
+        if (body == null || body.isEmpty()) {
+            return Result.fail("名称不能为空");
         }
+        excelDocumentService.rename(id, body);
+        return Result.success(";重命名成功");
+    }
+
+    /**
+     * 删除文档 — 软删除文档主记录 + 软删除 Sheet + 物理删除 Chunk
+     *
+     * @param id 文档ID
+     */
+    @DeleteMapping("/{id}")
+    @ApiOperation("删除文档")
+    public Result<?> delete(@PathVariable long id) {
+        log.info("删除文档: id[{}]", id);
+        excelDocumentService.delete(id); // 删除文档主记录
+        excelSheetService.delete(id); // 软删除文档Sheet
+        excelSheetChunkService.delete(id); // 物理删除Chunk
+        return Result.success("删除成功");
     }
 }

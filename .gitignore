@@ -1,5 +1,7 @@
 DataLoom-server/src/main/resources/application-local.yml
 dataloom-web/node_modules
+docs/*
+upload/*
 
 HELP.md
 target/

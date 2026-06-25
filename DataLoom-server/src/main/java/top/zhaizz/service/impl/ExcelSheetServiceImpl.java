@@ -1,7 +1,8 @@
 package top.zhaizz.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.zhaizz.mapper.ExcelDocumentMapper;
@@ -11,15 +12,16 @@ import top.zhaizz.pojo.entity.ExcelSheet;
 import top.zhaizz.pojo.vo.DocumentDetailVO;
 import top.zhaizz.service.ExcelSheetService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static top.zhaizz.common.util.parseArrayOrEmpty;
-import static top.zhaizz.common.util.parseObjectOrEmpty;
+import static top.zhaizz.common.util.*;
 
 @Service
+@Slf4j
 public class ExcelSheetServiceImpl implements ExcelSheetService {
     @Autowired
     private ExcelDocumentMapper excelDocumentMapper;
@@ -83,5 +85,59 @@ public class ExcelSheetServiceImpl implements ExcelSheetService {
                 .version(document.getVersion())
                 .sheets(sheetInfoList)
                 .build();
+    }
+
+    /**
+     * 软删除文档Sheet
+     *
+     * @param id 文档ID,在excel_sheet表中名为document_id字段
+     */
+    @Override
+    public void delete(long id) {
+        ExcelSheet excelSheet=ExcelSheet.builder().documentId(id).status(3).build();
+        excelSheetMapper.updateByDocumentId(excelSheet);
+    }
+
+    @Override
+    public ExcelSheet saveSheetMeta(Sheet sheet, ExcelDocument document, int sheetIndex, int totalSheets) {
+        ExcelSheet sheetEntity = new ExcelSheet();
+        sheetEntity.setDocumentId(document.getId());
+        sheetEntity.setSheetIndex(sheetIndex);
+        sheetEntity.setSheetName(sheet.getSheetName());
+        sheetEntity.setActive(sheetIndex == 0 ? 1 : 0);
+        sheetEntity.setStatus(1);
+
+        // 统计行列数
+        int maxRow = sheet.getLastRowNum();
+        int maxCol = calcMaxCol(sheet);
+        sheetEntity.setTotalRows(maxRow + 1);
+        sheetEntity.setTotalCols(maxCol);
+
+        // 合并单元格配置（通常很小，直接 JSON 存这里）
+        JSONObject mergeConfig = buildMergeConfig(sheet);
+        sheetEntity.setMergeConfigJson(mergeConfig.toJSONString());
+
+        // 列宽配置
+        JSONObject columnLen = buildColumnLen(sheet, maxCol);
+        sheetEntity.setColumnLenJson(columnLen.toJSONString());
+
+        JSONObject rowLen = buildRowLen(sheet);
+        sheetEntity.setRowLenJson(rowLen.toJSONString());
+
+        JSONObject config = new JSONObject();
+        config.put("merge", mergeConfig);
+        config.put("columnlen", columnLen);
+        config.put("rowlen", rowLen);
+        sheetEntity.setConfigJson(config.toJSONString());
+
+        // chunkCount 先设 0，等分块写入后再更新
+        sheetEntity.setChunkCount(0);
+
+        sheetEntity.setCreateTime(LocalDateTime.now());
+        sheetEntity.setUpdateTime(LocalDateTime.now());
+
+        excelSheetMapper.insert(sheetEntity);
+        log.info("Sheet 元信息已保存: id={}, rows={}, cols={}", sheetEntity.getId(), maxRow + 1, maxCol);
+        return sheetEntity;
     }
 }

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="top.zhaizz.mapper.ExcelDocumentMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into excel_document (name, sheet_count, sheet_names, version, status, file_path, file_size, creator_id, create_time, update_time)
+        values (#{name}, #{sheetCount}, #{sheetNames}, #{version}, #{status}, #{filePath}, #{fileSize}, #{creatorId}, #{createTime}, #{updateTime})
+    </insert>
+    <update id="updateById">
+        update excel_document
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="sheetCount != null">
+                sheet_count = #{sheetCount},
+            </if>
+            <if test="sheetNames != null">
+                sheet_names = #{sheetNames},
+            </if>
+            <if test="version != null">
+                version = #{version},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="filePath != null">
+                file_path = #{filePath},
+            </if>
+            <if test="fileSize != null">
+                file_size = #{fileSize},
+            </if>
+            <if test="creatorId != null">
+                creator_id = #{creatorId},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

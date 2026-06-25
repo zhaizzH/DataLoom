@@ -1,7 +1,6 @@
 package top.zhaizz.mapper;
 
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 import top.zhaizz.pojo.entity.ExcelDocument;
 
 import java.util.List;
@@ -13,7 +12,7 @@ public interface ExcelDocumentMapper {
      *
      * @return 查询结果
      */
-    @Select("select * from excel_document")
+    @Select("select * from excel_document where status = 1")
     List<ExcelDocument> list();
 
     /**
@@ -26,10 +25,16 @@ public interface ExcelDocumentMapper {
     ExcelDocument getById(long id);
 
     /**
-     * 更新重命名指定文档
+     * 更新文档主记录
      *
      * @param excelDocument 文档实体
      */
-    @Update("update excel_document set name = #{name} where id = #{id}")
-    void updateById(ExcelDocument excelDocument);
+    void updateById(ExcelDocument excelDocument); // TODO 待添加AOP
+
+    /**
+     * 创建文档记录
+     *
+     * @param excelDocument 文档实体
+     */
+    void insert(ExcelDocument excelDocument); // TODO 待添加AOP
 }

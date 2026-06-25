@@ -14,4 +14,19 @@ public interface ExcelSheetMapper {
      */
     @Select("select * from excel_sheet where id = #{id}")
     List<ExcelSheet> listSheetsByDocumentId(long id);
+
+    /**
+     * 更新 Sheet 状态
+     *
+     * @param excelSheet Sheet 实体
+     */
+    void updateByDocumentId(ExcelSheet excelSheet); // TODO 待添加AOP
+
+    /**
+     * 插入 Sheet 实体
+     *
+     * @param sheetEntity Sheet 实体
+     */
+    void insert(ExcelSheet sheetEntity);
+
 }

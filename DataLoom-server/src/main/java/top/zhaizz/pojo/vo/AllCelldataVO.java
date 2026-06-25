@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- *
+ * 所有单元格数据视图对象（包含所有 Sheet）
  */
 @Data
 @Builder

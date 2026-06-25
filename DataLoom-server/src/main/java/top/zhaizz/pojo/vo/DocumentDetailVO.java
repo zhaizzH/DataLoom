@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 文档详情
+ * 文档详情视图对象
  */
 @Data
 @Builder

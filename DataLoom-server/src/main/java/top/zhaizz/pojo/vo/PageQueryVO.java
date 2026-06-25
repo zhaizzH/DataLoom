@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 文档列表查询返回类
+ * 文档列表查询视图对象
  */
 @Data
 @Builder

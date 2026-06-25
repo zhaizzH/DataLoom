@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="top.zhaizz.mapper.ExcelSheetMapper">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into excel_sheet (document_id, sheet_index, sheet_name, total_rows, total_cols, chunk_count,row_len_json,
+                                 merge_config_json,column_len_json,config_json, active, status, create_time, update_time)
+        value (#{documentId},#{sheetIndex},#{sheetName},#{totalRows},#{totalCols},#{chunkCount},#{rowLenJson},
+                #{mergeConfigJson},#{columnLenJson},#{configJson},#{active},#{status},#{createTime},#{updateTime})
+    </insert>
+    <update id="updateByDocumentId">
+        update excel_sheet
+        <set>
+            <if test="chunkCount!=null">
+                chunk_count = #{chunkCount}
+            </if>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime}
+            </if>
+        </set>
+        where document_id = #{documentId}
+    </update>
+</mapper>
